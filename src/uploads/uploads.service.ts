@@ -37,19 +37,18 @@ export class UploadsService {
   }
 
   async replaceFile(
-    existingPublicPath: string,
+    existingPublicPath: string | undefined,
     file: Express.Multer.File
-  ): Promise<string> {
-    // Instead of overwriting in-place, upload a new file and delete the old one.
-    if (!existingPublicPath) return this.handleImageUpload(file);
-    const newUrl = await this.handleImageUpload(file);
-    // delete old file asynchronously (don't block on it)
-    try {
-      await this.deleteFile(existingPublicPath);
-    } catch (err) {
-      // ignore
+  ): Promise<{ newUrl: string; oldUrl?: string }> {
+    // Upload new file. Do not delete the old file here so callers can
+    // perform DB update and then delete old files only after success.
+    if (!existingPublicPath) {
+      const newUrl = await this.handleImageUpload(file);
+      return { newUrl };
     }
-    return newUrl;
+    const oldUrl = existingPublicPath;
+    const newUrl = await this.handleImageUpload(file);
+    return { newUrl, oldUrl };
   }
 
   async deleteFile(publicPath: string): Promise<void> {
