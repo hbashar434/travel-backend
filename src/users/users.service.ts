@@ -9,6 +9,7 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(email: string, password: string, name?: string, role = "user") {
+    if (!password) throw new Error("Password is required");
     const hashed = await bcrypt.hash(password, 10);
     const created = new this.userModel({ email, password: hashed, name, role });
     return created.save();
