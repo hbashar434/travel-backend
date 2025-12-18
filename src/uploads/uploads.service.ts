@@ -36,6 +36,33 @@ export class UploadsService {
     return `/uploads/${filename}`;
   }
 
+  async replaceFile(
+    existingPublicPath: string,
+    file: Express.Multer.File
+  ): Promise<string> {
+    // Instead of overwriting in-place, upload a new file and delete the old one.
+    if (!existingPublicPath) return this.handleImageUpload(file);
+    const newUrl = await this.handleImageUpload(file);
+    // delete old file asynchronously (don't block on it)
+    try {
+      await this.deleteFile(existingPublicPath);
+    } catch (err) {
+      // ignore
+    }
+    return newUrl;
+  }
+
+  async deleteFile(publicPath: string): Promise<void> {
+    if (!publicPath) return;
+    const filename = path.basename(publicPath);
+    const filepath = path.join(this.uploadsPath, filename);
+    try {
+      await fs.promises.unlink(filepath);
+    } catch (err) {
+      // ignore if file doesn't exist
+    }
+  }
+
   private getExtension(mime: string) {
     if (!mime) return null;
     if (mime === "image/jpeg" || mime === "image/jpg") return ".jpg";
