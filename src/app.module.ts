@@ -5,6 +5,7 @@ import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { PackagesModule } from "./packages/packages.module";
 import { BookingsModule } from "./bookings/bookings.module";
+import { UploadsModule } from "./uploads/uploads.module";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ dotenv.config();
     UsersModule,
     PackagesModule,
     BookingsModule,
+    UploadsModule,
   ],
 })
 export class AppModule {}
