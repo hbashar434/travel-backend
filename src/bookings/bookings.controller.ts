@@ -31,8 +31,77 @@ export class BookingsController {
   async create(@Body() dto: CreateBookingDto, @Req() req: any) {
     const userId = req.user?.sub;
     const pkg = await this.pkgs.findById(dto.packageId);
-    const totalPrice = (pkg.price || 0) * dto.travelers;
-    return this.bookings.create({ ...dto, userId, totalPrice } as any);
+    if (!pkg) {
+      throw new (await import("@nestjs/common")).NotFoundException(
+        "Package not found"
+      );
+    }
+
+    const pkgAny = pkg as any;
+
+    // Ensure package is active
+    if (pkgAny.status && pkgAny.status !== "active") {
+      throw new (await import("@nestjs/common")).BadRequestException(
+        "Package is not active"
+      );
+    }
+
+    const unitPrice = pkgAny.pricePerPerson ?? pkgAny.price ?? 0;
+
+    // Validate travelers against package min/max if present
+    if (
+      typeof pkgAny.minPersons === "number" &&
+      dto.travelers < pkgAny.minPersons
+    ) {
+      throw new (await import("@nestjs/common")).BadRequestException(
+        `Minimum persons for this package is ${pkgAny.minPersons}`
+      );
+    }
+    if (
+      typeof pkgAny.maxPersons === "number" &&
+      dto.travelers > pkgAny.maxPersons
+    ) {
+      throw new (await import("@nestjs/common")).BadRequestException(
+        `Maximum persons for this package is ${pkgAny.maxPersons}`
+      );
+    }
+
+    // Validate travelDate against availableDates if provided on package
+    if (
+      Array.isArray(pkgAny.availableDates) &&
+      pkgAny.availableDates.length > 0
+    ) {
+      const requested = new Date(dto.travelDate).toISOString().split("T")[0];
+      const found = pkgAny.availableDates.some((d: any) => {
+        const day = new Date(d).toISOString().split("T")[0];
+        return day === requested;
+      });
+      if (!found) {
+        throw new (await import("@nestjs/common")).BadRequestException(
+          "Requested travel date is not available for this package"
+        );
+      }
+    }
+
+    const totalPrice = unitPrice * dto.travelers;
+
+    // Prepare a package snapshot so bookings remain valid even if package changes later
+    const packageSnapshot = {
+      unitPrice,
+      packageTitle: pkgAny.title,
+      packageSlug: pkgAny.slug,
+      packageDestination: pkgAny.destination,
+    } as any;
+
+    return this.bookings.create({
+      ...dto,
+      userId,
+      totalPrice,
+      unitPrice: packageSnapshot.unitPrice,
+      packageTitle: packageSnapshot.packageTitle,
+      packageSlug: packageSnapshot.packageSlug,
+      packageDestination: packageSnapshot.packageDestination,
+    } as any);
   }
 
   @UseGuards(JwtGuard)

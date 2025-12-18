@@ -20,6 +20,18 @@ export class Booking {
   @Prop({ required: true })
   totalPrice: number;
 
+  @Prop()
+  unitPrice?: number;
+
+  @Prop()
+  packageTitle?: string;
+
+  @Prop()
+  packageSlug?: string;
+
+  @Prop()
+  packageDestination?: string;
+
   @Prop({ default: "pending" })
   status: string;
 }

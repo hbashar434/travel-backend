@@ -10,13 +10,26 @@ export class BookingsService {
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>
   ) {}
 
-  async create(dto: CreateBookingDto & { userId: string; totalPrice: number }) {
+  async create(
+    dto: CreateBookingDto & {
+      userId: string;
+      totalPrice: number;
+      unitPrice?: number;
+      packageTitle?: string;
+      packageSlug?: string;
+      packageDestination?: string;
+    }
+  ) {
     const created = new this.bookingModel({
       packageId: new Types.ObjectId(dto.packageId),
       userId: new Types.ObjectId(dto.userId),
       travelDate: new Date(dto.travelDate),
       travelers: dto.travelers,
       totalPrice: dto.totalPrice,
+      unitPrice: dto.unitPrice,
+      packageTitle: dto.packageTitle,
+      packageSlug: dto.packageSlug,
+      packageDestination: dto.packageDestination,
     } as any);
     return created.save();
   }
