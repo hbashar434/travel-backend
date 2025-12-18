@@ -83,11 +83,30 @@ export class PackagesController {
   @ApiBody({
     schema: {
       type: "object",
+      required: ["title", "slug", "pricePerPerson"],
       properties: {
-        images: {
+        title: { type: "string" },
+        slug: { type: "string" },
+        shortDescription: { type: "string" },
+        description: { type: "string" },
+        destination: { type: "string" },
+        category: { type: "string" },
+        meetingPoint: { type: "string" },
+        images: { type: "array", items: { type: "string", format: "binary" } },
+        pricePerPerson: { type: "number" },
+        discountPrice: { type: "number" },
+        durationDays: { type: "number" },
+        durationNights: { type: "number" },
+        availableDates: {
           type: "array",
-          items: { type: "string", format: "binary" },
+          items: { type: "string", format: "date" },
         },
+        minPersons: { type: "number" },
+        maxPersons: { type: "number" },
+        included: { type: "array", items: { type: "string" } },
+        excluded: { type: "array", items: { type: "string" } },
+        status: { type: "string", enum: ["active", "inactive"] },
+        isFeatured: { type: "boolean" },
       },
     },
   })
@@ -126,14 +145,28 @@ export class PackagesController {
       if (files.length > max) {
         throw new BadRequestException(`Maximum ${max} images are allowed`);
       }
-      const urls: string[] = [];
-      for (const f of files) {
-        const url = await this.uploadsService.handleImageUpload(f);
-        urls.push(url);
+      const uploadedUrls: string[] = [];
+      try {
+        for (const f of files) {
+          const url = await this.uploadsService.handleImageUpload(f);
+          uploadedUrls.push(url);
+        }
+        dto.images = uploadedUrls;
+
+        const created = await this.pkgService.create(dto);
+        return created;
+      } catch (err) {
+        // cleanup uploaded files when DB create fails
+        for (const u of uploadedUrls) {
+          try {
+            await this.uploadsService.deleteFile(u);
+          } catch (e) {
+            // ignore
+          }
+        }
+        throw err;
       }
-      dto.images = urls;
     }
-    return this.pkgService.create(dto);
   }
 
   @Put(":id")
@@ -146,10 +179,28 @@ export class PackagesController {
     schema: {
       type: "object",
       properties: {
-        images: {
+        title: { type: "string" },
+        slug: { type: "string" },
+        shortDescription: { type: "string" },
+        description: { type: "string" },
+        destination: { type: "string" },
+        category: { type: "string" },
+        meetingPoint: { type: "string" },
+        images: { type: "array", items: { type: "string", format: "binary" } },
+        pricePerPerson: { type: "number" },
+        discountPrice: { type: "number" },
+        durationDays: { type: "number" },
+        durationNights: { type: "number" },
+        availableDates: {
           type: "array",
-          items: { type: "string", format: "binary" },
+          items: { type: "string", format: "date" },
         },
+        minPersons: { type: "number" },
+        maxPersons: { type: "number" },
+        included: { type: "array", items: { type: "string" } },
+        excluded: { type: "array", items: { type: "string" } },
+        status: { type: "string", enum: ["active", "inactive"] },
+        isFeatured: { type: "boolean" },
       },
     },
   })
