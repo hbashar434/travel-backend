@@ -11,9 +11,7 @@ dotenv.config();
 
 @Module({
   imports: [
-    MongooseModule.forRoot(
-      process.env.MONGO_URI || "mongodb://localhost:27017/travel-app"
-    ),
+    MongooseModule.forRoot(process.env.MONGO_URI),
     AuthModule,
     UsersModule,
     PackagesModule,
