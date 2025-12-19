@@ -14,6 +14,9 @@ export class Booking {
   @Prop({ required: true })
   travelDate: Date;
 
+  @Prop()
+  endDate?: Date;
+
   @Prop({ required: true })
   travelers: number;
 
@@ -34,6 +37,13 @@ export class Booking {
 
   @Prop({ default: "pending" })
   status: string;
+
+  @Prop({
+    type: String,
+    enum: ["pending", "paid", "failed"],
+    default: "pending",
+  })
+  paymentStatus: string;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

@@ -18,18 +18,22 @@ export class BookingsService {
       packageTitle?: string;
       packageSlug?: string;
       packageDestination?: string;
+      endDate?: Date;
+      paymentStatus?: string;
     }
   ) {
     const created = new this.bookingModel({
       packageId: new Types.ObjectId(dto.packageId),
       userId: new Types.ObjectId(dto.userId),
       travelDate: new Date(dto.travelDate),
+      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       travelers: dto.travelers,
       totalPrice: dto.totalPrice,
       unitPrice: dto.unitPrice,
       packageTitle: dto.packageTitle,
       packageSlug: dto.packageSlug,
       packageDestination: dto.packageDestination,
+      paymentStatus: dto.paymentStatus,
     } as any);
     return created.save();
   }

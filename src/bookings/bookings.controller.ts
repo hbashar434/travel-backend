@@ -93,6 +93,22 @@ export class BookingsController {
       packageDestination: pkgAny.destination,
     } as any;
 
+    // compute endDate from package durationDays (if available)
+    let endDate: Date | undefined = undefined;
+    const start = new Date(dto.travelDate);
+    if (typeof pkgAny.durationDays === "number" && pkgAny.durationDays > 0) {
+      // if durationDays is N, endDate is start + (N - 1) days
+      endDate = new Date(start);
+      endDate.setDate(endDate.getDate() + (pkgAny.durationDays - 1));
+    } else if (
+      typeof pkgAny.durationNights === "number" &&
+      pkgAny.durationNights > 0
+    ) {
+      // fallback: durationNights -> endDate = start + durationNights days
+      endDate = new Date(start);
+      endDate.setDate(endDate.getDate() + pkgAny.durationNights);
+    }
+
     return this.bookings.create({
       ...dto,
       userId,
@@ -101,6 +117,7 @@ export class BookingsController {
       packageTitle: packageSnapshot.packageTitle,
       packageSlug: packageSnapshot.packageSlug,
       packageDestination: packageSnapshot.packageDestination,
+      endDate,
     } as any);
   }
 
