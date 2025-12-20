@@ -167,6 +167,11 @@ export class PackagesController {
         throw err;
       }
     }
+
+    // If no files were uploaded, allow creation with JSON payload.
+    // This supports clients that upload images separately and then send
+    // image URLs in the `images` array within the JSON body.
+    return this.pkgService.create(dto);
   }
 
   @Put(":id")
